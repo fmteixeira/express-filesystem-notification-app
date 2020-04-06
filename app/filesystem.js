@@ -51,6 +51,8 @@ class SubscriptionsManager {
         subGlobalDir,
         subscription
       );
+    } else {
+      return false;
     }
   }
 
