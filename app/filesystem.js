@@ -5,12 +5,22 @@ const subDir = "/data/subscriptions/";
 const subGlobalDir = "/data/subscriptionsGlobal/";
 
 class SubscriptionsManager {
+  static validateSubscription(subscription) {
+    return JSON.stringify(subscription) === "{}" || subscription === undefined
+      ? false
+      : true;
+  }
+
   static async subscriptionExists(dir, subscription) {
-    const fileName =
-      subscription !== undefined
-        ? sha256(JSON.stringify(subscription.keys))
-        : "";
+    const fileName = SubscriptionsManager.validateSubscription(subscription)
+      ? sha256(JSON.stringify(subscription.keys))
+      : "";
     return fs.pathExists(dir + fileName).then((exists) => exists); // => false
+  }
+
+  static async isSubscribedToApp(appName, subscription) {
+    const path = subDir + appName + "/";
+    return SubscriptionsManager.subscriptionExists(path, subscription);
   }
 
   static async subscribeApp(appName, subscription) {
@@ -18,7 +28,7 @@ class SubscriptionsManager {
     // Ensure App Path exists
     FileSystemManager.ensureDirectory(path).then((result) => {
       // Add subscription if one was given
-      if (result & (subscription !== undefined)) {
+      if (result & SubscriptionsManager.validateSubscription(subscription)) {
         FileSystemManager.writeJSON(path, subscription);
       }
     });
@@ -29,33 +39,52 @@ class SubscriptionsManager {
     FileSystemManager.removeJSON(path, subscription);
   }
 
-  static async isSubscribedToApp(appName, subscription) {
-    const path = subDir + appName + "/";
-    return SubscriptionsManager.subscriptionExists(path, subscription);
+  static async isSubscribedGlobal(subscription) {
+    if (SubscriptionsManager.validateSubscription(subscription)) {
+      return SubscriptionsManager.subscriptionExists(
+        subGlobalDir,
+        subscription
+      );
+    }
+  }
+
+  static async subscribeGlobal(subscription) {
+    if (SubscriptionsManager.validateSubscription(subscription)) {
+      FileSystemManager.writeJSON(subGlobalDir, subscription);
+    }
+  }
+
+  static async unsubscribeGlobal(subscription) {
+    if (SubscriptionsManager.validateSubscription(subscription)) {
+      FileSystemManager.removeJSON(subGlobalDir, subscription);
+    }
   }
 
   static async getApps(subscription) {
     return fs.readdir(subDir).then(async (apps) => {
-      return Promise.all(
-        apps.map(async (app) => {
-          if (JSON.stringify(subscription) !== "{}") {
-            return SubscriptionsManager.isSubscribedToApp(
-              app,
-              subscription
-            ).then((isSubscribed) => {
+      return {
+        global: await SubscriptionsManager.isSubscribedGlobal(subscription),
+        apps: await Promise.all(
+          apps.map(async (app) => {
+            if (SubscriptionsManager.validateSubscription(subscription)) {
+              return SubscriptionsManager.isSubscribedToApp(
+                app,
+                subscription
+              ).then((isSubscribed) => {
+                return {
+                  appName: app,
+                  isSubscribed: isSubscribed,
+                };
+              });
+            } else {
               return {
                 appName: app,
-                isSubscribed: isSubscribed,
+                isSubscribed: false,
               };
-            });
-          } else {
-            return {
-              appName: app,
-              isSubscribed: false,
-            };
-          }
-        })
-      );
+            }
+          })
+        ),
+      };
     });
   }
 }

@@ -12,28 +12,33 @@ async function fetchApps() {
         "Content-Type": "application/json",
       },
     })
-      .then(async (res) => await res.json())
+      .then(async (res) => {
+        const apps = await res.json();
+        console.log("Fetched Apps: ", apps);
+        return apps;
+      })
       .catch((error) => {
         console.error("Error:", error);
       });
   }
 }
 
-function displayApps(apps) {
+function displayApps(global, apps) {
   if (apps) {
     // Display Apps in List
-    console.log("Fetched Apps: ", apps);
     $("#app-list")
       .empty()
       .append(
         apps.map((app) =>
           $(
-            `<li class="${app.isSubscribed ? "subscribed" : ""}"><a>${
-              app.appName
-            }</a></li>`
+            `<li class="${
+              global ? "" : app.isSubscribed ? "subscribed" : "unsubscribed"
+            }"><a>${app.appName}</a></li>`
           )
         )
       );
+    // Set switch state
+    $("#global-checkbox").attr("checked", global);
   }
 }
 
@@ -49,7 +54,31 @@ async function createApp(appName) {
     .then((res) => {
       console.log("Create Response: ", res);
       // Fetch Apps and display them
-      fetchApps().then((apps) => displayApps(apps));
+      fetchApps().then((response) =>
+        displayApps(response.global, response.apps)
+      );
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+}
+
+async function setGlobalSubscription(global) {
+  const subscription = await swRegistration.pushManager.getSubscription();
+  // Fetch Applications
+  return await fetch(global ? "/subscribeGlobal" : "/unsubscribeGlobal", {
+    method: "POST",
+    body: subscription ? JSON.stringify(subscription) : undefined,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => {
+      console.log("Toggle Global Response: ", res);
+      // Fetch Apps and display them
+      fetchApps().then((response) =>
+        displayApps(response.global, response.apps)
+      );
     })
     .catch((error) => {
       console.error("Error:", error);
@@ -58,7 +87,7 @@ async function createApp(appName) {
 
 $(document).ready(function () {
   // Fetch Apps and display them
-  fetchApps().then((apps) => displayApps(apps));
+  fetchApps().then((response) => displayApps(response.global, response.apps));
 
   // On App click subcribe to it
   $("#app-list").on("click", "a", (event) => {
@@ -73,9 +102,11 @@ $(document).ready(function () {
   });
 
   // On Create App Button click create an App
-  $("#create-app-btn").on("click", () => {
-    const appName = $("#input").text();
-    createApp($("#input").val());
+  $("#create-app-btn").on("click", () => createApp($("#input").val()));
+
+  // On global switch click
+  $("#global-checkbox").on("click", () => {
+    setGlobalSubscription($("#global-checkbox").is(":checked"));
   });
 });
 
@@ -210,7 +241,9 @@ async function addSubscriptionOnServer(appName) {
     }).then((res) => {
       console.log("Subscription Response: ", res);
       // Fetch Apps and display them
-      fetchApps().then((apps) => displayApps(apps));
+      fetchApps().then((response) =>
+        displayApps(response.global, response.apps)
+      );
     });
   }
 }
@@ -228,7 +261,9 @@ async function removeSubscriptionOnServer(appName) {
     }).then((res) => {
       console.log("Subscription Response: ", res);
       // Fetch Apps and display them
-      fetchApps().then((apps) => displayApps(apps));
+      fetchApps().then((response) =>
+        displayApps(response.global, response.apps)
+      );
     });
   } else {
     console.error("Unsubscribe not yet Implemented");
