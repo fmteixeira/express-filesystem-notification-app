@@ -4,12 +4,7 @@ const sha256 = require("js-sha256").sha256;
 const subDir = "/data/subscriptions/";
 const subGlobalDir = "/data/subscriptionsGlobal/";
 
-class FileSystemManager {
-  static createDefaultDirectories() {
-    FileSystemManager.ensureDirectory(subDir);
-    FileSystemManager.ensureDirectory(subGlobalDir);
-  }
-
+class SubscriptionsManager {
   static async subscriptionExists(dir, subscription) {
     const fileName =
       subscription !== undefined
@@ -18,25 +13,25 @@ class FileSystemManager {
     return fs.pathExists(dir + fileName).then((exists) => exists); // => false
   }
 
-  static async createAppSubscription(appName, subscription) {
+  static async subscribeApp(appName, subscription) {
     const path = subDir + appName + "/";
     // Ensure App Path exists
     FileSystemManager.ensureDirectory(path).then((result) => {
       // Add subscription if one was given
       if (result & (subscription !== undefined)) {
-        this.writeJSON(path, subscription);
+        FileSystemManager.writeJSON(path, subscription);
       }
     });
   }
 
-  static async removeAppSubscription(appName, subscription) {
+  static async unsubscribeApp(appName, subscription) {
     const path = subDir + appName + "/";
-    this.removeJSON(path, subscription);
+    FileSystemManager.removeJSON(path, subscription);
   }
 
   static async isSubscribedToApp(appName, subscription) {
     const path = subDir + appName + "/";
-    return FileSystemManager.subscriptionExists(path, subscription);
+    return SubscriptionsManager.subscriptionExists(path, subscription);
   }
 
   static async getApps(subscription) {
@@ -44,14 +39,15 @@ class FileSystemManager {
       return Promise.all(
         apps.map(async (app) => {
           if (JSON.stringify(subscription) !== "{}") {
-            return FileSystemManager.isSubscribedToApp(app, subscription).then(
-              (isSubscribed) => {
-                return {
-                  appName: app,
-                  isSubscribed: isSubscribed,
-                };
-              }
-            );
+            return SubscriptionsManager.isSubscribedToApp(
+              app,
+              subscription
+            ).then((isSubscribed) => {
+              return {
+                appName: app,
+                isSubscribed: isSubscribed,
+              };
+            });
           } else {
             return {
               appName: app,
@@ -62,8 +58,13 @@ class FileSystemManager {
       );
     });
   }
+}
 
-  /* File & Directory Management Functions */
+class FileSystemManager {
+  static async createDefaultDirectories() {
+    FileSystemManager.ensureDirectory(subDir);
+    FileSystemManager.ensureDirectory(subGlobalDir);
+  }
 
   static async ensureDirectory(dir) {
     return fs
@@ -103,4 +104,4 @@ class FileSystemManager {
   }
 }
 
-module.exports = { FileSystemManager };
+module.exports = { SubscriptionsManager, FileSystemManager };

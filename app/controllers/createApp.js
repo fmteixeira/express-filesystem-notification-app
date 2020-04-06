@@ -1,4 +1,4 @@
-const { FileSystemManager } = require("../filesystem");
+const { SubscriptionsManager } = require("../filesystem");
 
 // Subscribe Route
 module.exports = function (app) {
@@ -11,6 +11,6 @@ module.exports = function (app) {
     res.status(201).json({});
 
     // Create JSON File
-    FileSystemManager.createAppSubscription(appName);
+    SubscriptionsManager.subscribeApp(appName);
   });
 };

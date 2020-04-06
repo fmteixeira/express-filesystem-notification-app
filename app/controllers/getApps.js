@@ -1,4 +1,4 @@
-const { FileSystemManager } = require("../filesystem");
+const { SubscriptionsManager } = require("../filesystem");
 
 // Subscribe Route
 module.exports = function (app) {
@@ -6,6 +6,6 @@ module.exports = function (app) {
     // Get pushSubscription Object
     const subscription = req.body;
 
-    FileSystemManager.getApps(subscription).then((apps) => res.send(apps));
+    SubscriptionsManager.getApps(subscription).then((apps) => res.send(apps));
   });
 };

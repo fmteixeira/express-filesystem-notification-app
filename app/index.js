@@ -10,25 +10,26 @@ const app = express().use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "client")));
 
 // Create filesystem default paths
-FileSystemManager.createDefaultDirectories();
+FileSystemManager.createDefaultDirectories().then(() => {
+  // Setup & Start Server
+  const publicVapidKey =
+    "BPf8gkZ051TIP3AiT0R3OyFUNcCwCDwHWOdlmgc6AHR96XPlbAnLwS5J3ZkTeTxxH384B5OCpcpLUfk1ykPWi30";
+  const privateVapidKey = "Aa_SeNHd-pgyURBsr59VFtkL1YzAYBtJ2ZBCN7JEilA";
 
-const publicVapidKey =
-  "BPf8gkZ051TIP3AiT0R3OyFUNcCwCDwHWOdlmgc6AHR96XPlbAnLwS5J3ZkTeTxxH384B5OCpcpLUfk1ykPWi30";
-const privateVapidKey = "Aa_SeNHd-pgyURBsr59VFtkL1YzAYBtJ2ZBCN7JEilA";
+  webpush.setVapidDetails(
+    "mailto:test@test.com",
+    publicVapidKey,
+    privateVapidKey
+  );
 
-webpush.setVapidDetails(
-  "mailto:test@test.com",
-  publicVapidKey,
-  privateVapidKey
-);
+  // Start Server
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => console.log(`Server started on port ${port}`));
 
-// Start Server
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server started on port ${port}`));
+  // Router
+  app.use(function (req, res, next) {
+    next();
+  });
 
-// Router
-app.use(function (req, res, next) {
-  next();
+  require("./routes/router")(app);
 });
-
-require("./routes/router")(app);

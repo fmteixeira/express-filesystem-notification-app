@@ -1,4 +1,4 @@
-const { FileSystemManager } = require("../filesystem");
+const { SubscriptionsManager } = require("../filesystem");
 const webpush = require("web-push");
 
 // Subscribe Route
@@ -13,7 +13,7 @@ module.exports = function (app) {
     res.status(201).json({});
 
     // Remove JSON File
-    FileSystemManager.removeAppSubscription(appName, subscription);
+    SubscriptionsManager.unsubscribeApp(appName, subscription);
 
     /*
     // Create Payload
