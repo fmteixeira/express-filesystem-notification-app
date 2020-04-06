@@ -2,11 +2,15 @@ const express = require("express");
 const webpush = require("web-push");
 const bodyParser = require("body-parser");
 const path = require("path");
+const { FileSystemManager } = require("./filesystem");
 
 const app = express().use(bodyParser.json());
 
 // Set Static Path
 app.use(express.static(path.join(__dirname, "client")));
+
+// Create filesystem default paths
+FileSystemManager.createDefaultDirectories();
 
 const publicVapidKey =
   "BPf8gkZ051TIP3AiT0R3OyFUNcCwCDwHWOdlmgc6AHR96XPlbAnLwS5J3ZkTeTxxH384B5OCpcpLUfk1ykPWi30";

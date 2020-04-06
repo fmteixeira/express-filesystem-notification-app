@@ -9,11 +9,11 @@ async function fetchApps() {
       method: "POST",
       body: subscription ? JSON.stringify(subscription) : undefined,
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     })
-      .then(async res => await res.json())
-      .catch(error => {
+      .then(async (res) => await res.json())
+      .catch((error) => {
         console.error("Error:", error);
       });
   }
@@ -26,7 +26,7 @@ function displayApps(apps) {
     $("#app-list")
       .empty()
       .append(
-        apps.map(app =>
+        apps.map((app) =>
           $(
             `<li class="${app.isSubscribed ? "subscribed" : ""}"><a>${
               app.appName
@@ -43,31 +43,27 @@ async function createApp(appName) {
   return await fetch(`/createApp?appName=${appName}`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   })
-    .then(res => {
+    .then((res) => {
       console.log("Create Response: ", res);
       // Fetch Apps and display them
-      fetchApps().then(apps => displayApps(apps));
+      fetchApps().then((apps) => displayApps(apps));
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error:", error);
     });
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
   // Fetch Apps and display them
-  fetchApps().then(apps => displayApps(apps));
+  fetchApps().then((apps) => displayApps(apps));
 
   // On App click subcribe to it
-  $("#app-list").on("click", "a", event => {
+  $("#app-list").on("click", "a", (event) => {
     const appName = $(event.target).text();
-    if (
-      $(event.target)
-        .parent()
-        .hasClass("subscribed")
-    ) {
+    if ($(event.target).parent().hasClass("subscribed")) {
       console.log("Should unsub");
       removeSubscriptionOnServer(appName, false);
     } else {
@@ -102,11 +98,11 @@ async function getServiveWorker() {
 
     return navigator.serviceWorker
       .register("sw.js")
-      .then(function(swReg) {
+      .then(function (swReg) {
         swRegistration = swReg;
         return swRegistration;
       })
-      .catch(function(error) {
+      .catch(function (error) {
         console.error("Service Worker Error", error);
         return false;
       });
@@ -143,7 +139,7 @@ function urlB64ToUint8Array(base64String) {
 
 function subscribeUser() {
   // Subscribe the User on the server here!
-  swRegistration.pushManager.getSubscription().then(function(subscription) {
+  swRegistration.pushManager.getSubscription().then(function (subscription) {
     updateSubscriptionOnServer(subscription, true);
   });
 }
@@ -153,16 +149,16 @@ async function enablePushNotificatios() {
   swRegistration.pushManager
     .subscribe({
       userVisibleOnly: true,
-      applicationServerKey: applicationServerKey
+      applicationServerKey: applicationServerKey,
     })
-    .then(function(subscription) {
+    .then(function (subscription) {
       console.log("User is subscribed: ", subscription);
 
       isSubscribed = true;
 
       updateBtn(isSubscribed);
     })
-    .catch(function(err) {
+    .catch(function (err) {
       console.log("Failed to subscribe the user: ", err);
       updateBtn(false);
     });
@@ -178,20 +174,20 @@ async function enablePushNotificatios() {
 function disablePushNotificatios() {
   swRegistration.pushManager
     .getSubscription()
-    .then(function(subscription) {
+    .then(function (subscription) {
       subscription
         .unsubscribe()
-        .then(function(successful) {
+        .then(function (successful) {
           console.log("You've successfully unsubscribed" + successful);
         })
-        .catch(e => {
+        .catch((e) => {
           console.log("Unsubscription failed" + e);
         });
     })
-    .catch(function(error) {
+    .catch(function (error) {
       console.log("Error unsubscribing", error);
     })
-    .then(function() {
+    .then(function () {
       console.log("User is unsubscribed.");
       isSubscribed = false;
 
@@ -209,32 +205,30 @@ async function addSubscriptionOnServer(appName) {
       method: "POST",
       body: JSON.stringify(subscription),
       headers: {
-        "content-type": "application/json"
-      }
-    }).then(res => {
+        "content-type": "application/json",
+      },
+    }).then((res) => {
       console.log("Subscription Response: ", res);
       // Fetch Apps and display them
-      fetchApps().then(apps => displayApps(apps));
+      fetchApps().then((apps) => displayApps(apps));
     });
-  } else {
-    console.error("Unsubscribe not yet Implemented");
   }
 }
 
 async function removeSubscriptionOnServer(appName) {
   const subscription = await swRegistration.pushManager.getSubscription();
   if (subscription) {
-    console.log(`Sending Subscription to ${appName}`);
+    console.log(`Sending Unsubscription to ${appName}`);
     await fetch(`/unsubscribe?appName=${appName}`, {
       method: "DELETE",
       body: JSON.stringify(subscription),
       headers: {
-        "content-type": "application/json"
-      }
-    }).then(res => {
+        "content-type": "application/json",
+      },
+    }).then((res) => {
       console.log("Subscription Response: ", res);
       // Fetch Apps and display them
-      fetchApps().then(apps => displayApps(apps));
+      fetchApps().then((apps) => displayApps(apps));
     });
   } else {
     console.error("Unsubscribe not yet Implemented");
@@ -255,7 +249,7 @@ function updateBtn(isSubscribed) {
   } else {
     pushButton.attr("disabled", false);
     pushButton.html("Enable Push Messaging");
-    pushButton.on("click", function() {
+    pushButton.on("click", function () {
       enablePushNotificatios();
     });
   }
@@ -265,7 +259,7 @@ function updateBtn(isSubscribed) {
 
 function initializeUI() {
   // Set the initial subscription value
-  swRegistration.pushManager.getSubscription().then(function(subscription) {
+  swRegistration.pushManager.getSubscription().then(function (subscription) {
     isSubscribed = !(subscription === null);
 
     const subscriptionJson = $(".js-subscription-json");
@@ -283,7 +277,7 @@ function initializeUI() {
     updateBtn(isSubscribed);
   });
 }
-getServiveWorker().then(serviceWorker => {
+getServiveWorker().then((serviceWorker) => {
   if (serviceWorker) {
     initializeUI();
   }
