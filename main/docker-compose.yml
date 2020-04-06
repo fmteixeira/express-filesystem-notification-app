@@ -1,0 +1,15 @@
+version: "3"
+
+volumes:
+  app-data:
+    external: false
+
+services:
+  app:
+    container_name: app
+    image: app
+    build: ../app
+    volumes:
+      - app-data:/usr/src/app
+    ports:
+      - "3000:3000"
