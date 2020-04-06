@@ -5,40 +5,46 @@ const subDir = "/data/subscriptions/";
 const subGlobalDir = "/data/subscriptionsGlobal/";
 
 class SubscriptionsManager {
+  // Validate a given subcription
   static validateSubscription(subscription) {
     return JSON.stringify(subscription) === "{}" || subscription === undefined
       ? false
       : true;
   }
 
+  // Check if a subscription exists
   static async subscriptionExists(dir, subscription) {
     const fileName = SubscriptionsManager.validateSubscription(subscription)
       ? sha256(JSON.stringify(subscription.keys))
       : "";
-    return fs.pathExists(dir + fileName).then((exists) => exists); // => false
+    return fs.pathExists(dir + fileName).then((exists) => exists);
   }
 
+  // Check if a given subscription is subscribed to a given app
   static async isSubscribedToApp(appName, subscription) {
     const path = subDir + appName + "/";
     return SubscriptionsManager.subscriptionExists(path, subscription);
   }
 
+  // Subscribe a given subscription to a given app
   static async subscribeApp(appName, subscription) {
     const path = subDir + appName + "/";
     // Ensure App Path exists
     FileSystemManager.ensureDirectory(path).then((result) => {
       // Add subscription if one was given
       if (result & SubscriptionsManager.validateSubscription(subscription)) {
-        FileSystemManager.writeJSON(path, subscription);
+        FileSystemManager.writeSubscription(path, subscription);
       }
     });
   }
 
+  // Unsubscribe a given subcription from a given app
   static async unsubscribeApp(appName, subscription) {
     const path = subDir + appName + "/";
-    FileSystemManager.removeJSON(path, subscription);
+    FileSystemManager.unwriteSubscription(path, subscription);
   }
 
+  // Check if a given subcription is in the global list
   static async isSubscribedGlobal(subscription) {
     if (SubscriptionsManager.validateSubscription(subscription)) {
       return SubscriptionsManager.subscriptionExists(
@@ -48,18 +54,21 @@ class SubscriptionsManager {
     }
   }
 
+  // Subscribe a given subscription to the global list
   static async subscribeGlobal(subscription) {
     if (SubscriptionsManager.validateSubscription(subscription)) {
-      FileSystemManager.writeJSON(subGlobalDir, subscription);
+      FileSystemManager.writeSubscription(subGlobalDir, subscription);
     }
   }
 
+  // Unsubscribe a given subscription from the global list
   static async unsubscribeGlobal(subscription) {
     if (SubscriptionsManager.validateSubscription(subscription)) {
-      FileSystemManager.removeJSON(subGlobalDir, subscription);
+      FileSystemManager.unwriteSubscription(subGlobalDir, subscription);
     }
   }
 
+  // Get the apps' subscription state in the following format: { global: boolean, apps: Array<{ appName: string, isSubscribed: boolean }> }
   static async getApps(subscription) {
     return fs.readdir(subDir).then(async (apps) => {
       return {
@@ -90,11 +99,13 @@ class SubscriptionsManager {
 }
 
 class FileSystemManager {
+  // Create the default directories that store the subscriptions
   static async createDefaultDirectories() {
     FileSystemManager.ensureDirectory(subDir);
     FileSystemManager.ensureDirectory(subGlobalDir);
   }
 
+  // Ensures a directory existance
   static async ensureDirectory(dir) {
     return fs
       .ensureDir(dir)
@@ -108,7 +119,8 @@ class FileSystemManager {
       });
   }
 
-  static async writeJSON(dir, subscription) {
+  // Write a subscription file
+  static async writeSubscription(dir, subscription) {
     const fileName = sha256(JSON.stringify(subscription.keys));
 
     fs.writeJson(dir + fileName, subscription)
@@ -120,7 +132,8 @@ class FileSystemManager {
       });
   }
 
-  static async removeJSON(dir, subscription) {
+  // Remove a subcription file
+  static async unwriteSubscription(dir, subscription) {
     const fileName = sha256(JSON.stringify(subscription.keys));
 
     fs.remove(dir + fileName, subscription)
