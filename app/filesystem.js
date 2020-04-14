@@ -1,8 +1,8 @@
 const fs = require("fs-extra");
 const sha256 = require("js-sha256").sha256;
 
-const subDir = "/data/subscriptions/";
-const subGlobalDir = "/data/subscriptionsGlobal/";
+const subDir = "/subscriptions/";
+const subGlobalDir = "/subscriptionsGlobal/";
 
 class SubscriptionsManager {
   // Validate a given subcription

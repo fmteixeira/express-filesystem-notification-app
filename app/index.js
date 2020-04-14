@@ -2,12 +2,14 @@ const express = require("express");
 const webpush = require("web-push");
 const bodyParser = require("body-parser");
 const path = require("path");
+const cors = require("cors");
 const { FileSystemManager } = require("./filesystem");
 
 const app = express().use(bodyParser.json());
+app.use(cors());
 
 // Set Static Path
-app.use(express.static(path.join(__dirname, "client")));
+app.use(express.static(path.join(__dirname, "client/build")));
 
 // Create filesystem default paths
 FileSystemManager.createDefaultDirectories().then(() => {
